@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神曲接唱大挑戰 (全自動化實戰版)</title>
+    <title>神曲接唱大挑戰 (完全體版)</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #ffffff; max-width: 800px; margin: 0 auto; padding: 20px; text-align: center; }
         h1 { color: #ff4081; margin-bottom: 5px; }
@@ -27,7 +27,6 @@
         .skip-btn { background: #ff9100; color: #000; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; display: none; margin: 15px auto; font-size: 16px; }
         .skip-btn:hover { background: #ff6d00; }
         
-        /* 練習模式專用 */
         #practiceArea { display: none; text-align: left; }
         .practice-item { background: #1e1e1e; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #00e676;}
         .practice-info { flex-grow: 1; }
@@ -53,7 +52,6 @@
         <label id="countLabel" style="display:none;">歌曲數量：<input type="number" id="countInput" value="20" style="width:60px;"></label>
     </div>
 
-    <!-- 實戰排位模式區域 -->
     <div id="battleArea">
         <div class="stats-bar">
             <span>回合: <span id="roundCount">1</span></span>
@@ -63,7 +61,6 @@
         <button id="micBtn" class="mic-btn" onclick="startChallenge()">🎙️</button>
         <div id="timerDisplay" class="timer-display">--</div>
         
-        <!-- 跳過按鈕加回這裡 -->
         <button id="skipBtn" class="skip-btn" onclick="skipCurrentMusic()">⏭️ 跳過音樂</button>
         
         <div id="playerCard" class="card">
@@ -81,7 +78,6 @@
         </div>
     </div>
 
-    <!-- 題庫練習模式區域 -->
     <div id="practiceArea">
         <div style="text-align: center; margin-bottom: 20px;">
             <button class="generate-btn" onclick="generatePracticeList()">🧠 產生關聯神曲題庫</button>
@@ -98,7 +94,6 @@
         if(recognition) { 
             recognition.lang = 'zh-TW'; 
             recognition.interimResults = false;
-            // 啟用連續聆聽，避免提早中斷
             recognition.continuous = true; 
         }
 
@@ -108,12 +103,18 @@
         let currentRound = 1;
         let playedTracks = new Set();
         let isSystemListening = false;
+        let isAudioUnlocked = false;
         const audioPlayer = document.getElementById('audioPlayer');
+
+        function unlockAudio() {
+            if (isAudioUnlocked) return;
+            audioPlayer.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            audioPlayer.play().then(() => { isAudioUnlocked = true; }).catch(() => {});
+        }
 
         function openLyricsPopup(artist, title) {
             const query = encodeURIComponent(`${artist} ${title} 歌詞`);
-            const url = `https://www.google.com/search?q=${query}`;
-            window.open(url, 'lyricsPopup', 'width=400,height=600,scrollbars=yes,resizable=yes');
+            window.open(`https://www.google.com/search?q=${query}`, 'lyricsPopup', 'width=400,height=600,scrollbars=yes,resizable=yes');
         }
 
         function switchMode(mode) {
@@ -132,23 +133,19 @@
             document.getElementById('countLabel').style.display = mode === 'practice' ? 'inline-block' : 'none';
         }
 
-        // ================= 實戰排位模式邏輯 =================
         if(recognition) {
             recognition.onresult = async function(event) {
                 if(!isSystemListening) return;
                 
-                // 取得最新的辨識結果
                 const current = event.resultIndex;
                 const transcript = event.results[current][0].transcript;
                 const keyword = document.getElementById('keywordInput').value.trim();
                 
-                // 容錯機制：沒聽到關鍵字，不中斷計時器，鼓勵玩家繼續唱
                 if (!transcript.includes(keyword)) {
-                    document.getElementById('status').innerText = `⚠️ 剛聽到「${transcript}」，但沒有「${keyword}」，請繼續唱！`;
+                    document.getElementById('status').innerText = `⚠️ 聽到了「${transcript}」，但沒有「${keyword}」，請繼續唱！`;
                     return;
                 }
                 
-                // 成功抓到關鍵字，強制停止收音與計時
                 isSystemListening = false;
                 recognition.stop();
                 clearInterval(countdownInterval);
@@ -158,7 +155,7 @@
             };
             
             recognition.onerror = (event) => {
-                if(event.error === 'no-speech' && isSystemListening) return; // 忽略長時間靜音，交給計時器判斷
+                if(event.error === 'no-speech' && isSystemListening) return;
                 clearInterval(countdownInterval);
                 document.getElementById('micBtn').classList.remove('listening');
                 document.getElementById('status').innerText = "⚠️ 麥克風異常，請點擊重試。";
@@ -167,9 +164,7 @@
 
         function startChallenge() {
             if(!recognition) return alert("請使用 Chrome 瀏覽器。");
-            
-            // 點擊瞬間偷偷解鎖 iOS 播放權限
-            audioPlayer.play().then(() => audioPlayer.pause()).catch(() => {});
+            unlockAudio();
             
             document.getElementById('playerCard').style.display = 'none';
             document.getElementById('aiCard').style.display = 'none';
@@ -186,7 +181,7 @@
                 document.getElementById('timerDisplay').innerText = timeLeft;
                 document.getElementById('timerDisplay').classList.remove('danger');
                 
-                try { recognition.start(); } catch(e) {} // 避免重複啟動錯誤
+                try { recognition.start(); } catch(e) {}
 
                 clearInterval(countdownInterval);
                 countdownInterval = setInterval(() => {
@@ -207,20 +202,39 @@
 
         async function processPlayerTurn(query, keyword) {
             try {
-                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&country=TW&media=music&entity=song&limit=5`);
+                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&country=TW&media=music&entity=song&limit=30`);
                 const data = await response.json();
 
-                if (data.resultCount === 0) {
-                    return document.getElementById('status').innerText = "❌ 拒絕判定：曲庫查無此歌，請點麥克風重試！";
+                let validTracks = data.results.filter(t => !playedTracks.has(t.trackId));
+                if (validTracks.length === 0) {
+                    if(data.resultCount > 0) return document.getElementById('status').innerText = "❌ 拒絕判定：這首歌之前唱過了！請換一首。";
+                    return document.getElementById('status').innerText = "❌ 拒絕判定：曲庫查無此歌，請重試！";
                 }
-                
-                let track = data.results.find(t => !playedTracks.has(t.trackId));
-                if (!track) return document.getElementById('status').innerText = "❌ 這首歌之前唱過了！請換一首。";
 
+                const targetTitle = validTracks[0].trackName.replace(/[\(（].*?[\)）]/g, '').trim().toLowerCase();
+                let sameNameTracks = validTracks.filter(t => t.trackName.replace(/[\(（].*?[\)）]/g, '').trim().toLowerCase() === targetTitle);
+
+                const currentYear = new Date().getFullYear();
+                let bestMatch = null;
+                let highestScore = -9999;
+
+                sameNameTracks.forEach((track) => {
+                    const originalIndex = validTracks.findIndex(t => t.trackId === track.trackId);
+                    let score = (30 - originalIndex) * 5; 
+                    const releaseYear = parseInt(track.releaseDate.substring(0, 4));
+                    score += (currentYear - releaseYear) * 2; // 歲月紅利
+
+                    if (score > highestScore) {
+                        highestScore = score;
+                        bestMatch = track;
+                    }
+                });
+
+                let track = bestMatch;
                 playedTracks.add(track.trackId);
                 
                 document.getElementById('pTitle').innerText = track.trackName;
-                document.getElementById('pArtist').innerText = track.artistName;
+                document.getElementById('pArtist').innerText = track.artistName; 
                 document.getElementById('pSearchBtn').onclick = () => openLyricsPopup(track.artistName, track.trackName);
                 document.getElementById('playerCard').style.display = 'block';
 
@@ -254,20 +268,13 @@
                 document.getElementById('aiCard').style.display = 'block';
                 document.getElementById('status').innerText = "🔥 AI 出招！";
                 
-                // AI 音樂播完或被跳過後，自動進入下一回合
                 playAudio(bestMatch.previewUrl, () => {
                     currentRound++;
                     document.getElementById('roundCount').innerText = currentRound;
                     if(currentRound >= 30) document.getElementById('rankTitle').innerText = "黃金麥霸";
                     
                     document.getElementById('status').innerText = `✅ 準備進入第 ${currentRound} 回合...`;
-                    
-                    // 延遲 1.5 秒讓玩家看清楚，然後自動啟動新回合
-                    setTimeout(() => {
-                        if (currentMode === 'battle') {
-                            startChallenge();
-                        }
-                    }, 1500);
+                    setTimeout(() => { if (currentMode === 'battle') startChallenge(); }, 1500);
                 });
             } catch (error) {
                 document.getElementById('status').innerText = "⚠️ 網路錯誤。";
@@ -277,7 +284,7 @@
         function playAudio(url, onEndedCallback) {
             if (!url) return onEndedCallback();
             audioPlayer.src = url;
-            audioPlayer.play();
+            audioPlayer.play().catch(e => console.error("播放失敗:", e));
             document.getElementById('skipBtn').style.display = 'block';
             
             audioPlayer.onended = () => {
@@ -292,8 +299,8 @@
             if (audioPlayer.onended) audioPlayer.onended();
         }
 
-        // ================= 題庫練習模式邏輯 =================
         async function generatePracticeList() {
+            unlockAudio();
             const keyword = document.getElementById('keywordInput').value.trim();
             const count = parseInt(document.getElementById('countInput').value);
             const statusEl = document.getElementById('practiceStatus');
@@ -301,38 +308,34 @@
             
             if(!keyword || count <= 0) return alert("請輸入正確數值");
             
-            statusEl.innerText = "⏳ 正在從雲端撈取大量數據並進行智慧過濾...";
+            statusEl.innerText = "⏳ 正在強制挖掘多樣化的熱門神曲...";
             listEl.innerHTML = "";
             
             try {
                 const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(keyword)}&country=TW&media=music&entity=song&limit=200`);
                 const data = await response.json();
                 
-                if(data.resultCount === 0) {
-                    statusEl.innerText = "❌ 找不到相關歌曲。";
-                    return;
-                }
+                if(data.resultCount === 0) return statusEl.innerText = "❌ 找不到相關歌曲。";
                 
                 let uniqueSongs = [];
-                let seenKeys = new Set();
+                let seenTitles = new Set(); 
                 let artistCount = {}; 
                 
                 for(let track of data.results) {
                     if(track.primaryGenreName === "Instrumental" || track.primaryGenreName === "New Age") continue;
                     if(track.trackName.toLowerCase().includes("instrumental") || track.trackName.toLowerCase().includes("live")) continue;
 
-                    let baseTitle = track.trackName.replace(/[\(（].*?[\)）]/g, '').trim();
-                    let uniqueKey = track.artistName + "-" + baseTitle;
+                    let baseTitle = track.trackName.replace(/[\(（].*?[\)）]/g, '').trim().toLowerCase();
                     artistCount[track.artistName] = (artistCount[track.artistName] || 0) + 1;
 
-                    if(!seenKeys.has(uniqueKey) && artistCount[track.artistName] <= 2) {
-                        seenKeys.add(uniqueKey);
+                    if(!seenTitles.has(baseTitle) && artistCount[track.artistName] <= 2) {
+                        seenTitles.add(baseTitle);
                         uniqueSongs.push(track);
                     }
                 }
                 
                 let finalSongs = uniqueSongs.slice(0, count);
-                statusEl.innerText = `✅ 成功為您過濾並整理 ${finalSongs.length} 首熱門神曲！`;
+                statusEl.innerText = `✅ 成功過濾並整理 ${finalSongs.length} 首熱門神曲！`;
                 
                 finalSongs.forEach((track, index) => {
                     const item = document.createElement('div');
@@ -343,7 +346,7 @@
                             <div class="practice-artist">${track.artistName}</div>
                         </div>
                         <div class="practice-actions">
-                            <button class="play-btn" onclick="playAudio('${track.previewUrl}', () => {})">▶️ 試聽</button>
+                            <button class="play-btn" onclick="playAudio('${track.previewUrl}', () => { document.getElementById('skipBtn').style.display='none'; })">▶️ 試聽</button>
                             <button class="lyric-search-btn" onclick="openLyricsPopup('${track.artistName.replace(/'/g, "\\'")}', '${track.trackName.replace(/'/g, "\\'")}')">🔍 歌詞</button>
                         </div>
                     `;
