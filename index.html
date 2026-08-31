@@ -3,190 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神曲接唱大挑戰 (KTV 語音對戰版)</title>
+    <title>神曲接唱大挑戰 (排位賽季版)</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            text-align: center;
-        }
-        h1 { color: #ff4081; }
-        .control-panel {
-            background: #1e1e1e;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        .control-panel label { display: flex; align-items: center; gap: 5px; font-weight: bold; }
-        input[type="text"], input[type="number"] {
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid #444;
-            background: #333;
-            color: white;
-            text-align: center;
-        }
-        #keywordInput { width: 100px; color: #ff4081; font-weight: bold; }
-        #timerInput { width: 60px; }
-        
-        .action-area { margin: 30px 0; }
-        .mic-btn {
-            background: #ff4081;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 100px;
-            height: 100px;
-            font-size: 40px;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(255, 64, 129, 0.5);
-            transition: 0.3s;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #ffffff; max-width: 800px; margin: 0 auto; padding: 20px; text-align: center; }
+        h1 { color: #ff4081; margin-bottom: 5px; }
+        .stats-bar { background: #1e1e1e; padding: 10px; border-radius: 8px; margin-bottom: 20px; color: #00e676; font-weight: bold; display: flex; justify-content: space-around; font-size: 18px; border: 1px solid #333; }
+        .rank-gold { color: #ffd700; } .rank-plat { color: #e5e4e2; } .rank-dia { color: #b9f2ff; text-shadow: 0 0 5px #b9f2ff; }
+        .control-panel { background: #1e1e1e; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        input[type="text"], input[type="number"] { padding: 8px; border-radius: 5px; border: 1px solid #444; background: #333; color: white; text-align: center; }
+        #keywordInput { width: 80px; color: #ff4081; font-weight: bold; }
+        .mic-btn { background: #ff4081; color: white; border: none; border-radius: 50%; width: 90px; height: 90px; font-size: 36px; cursor: pointer; box-shadow: 0 0 15px rgba(255, 64, 129, 0.5); transition: 0.3s; margin: 20px 0; }
         .mic-btn:hover { transform: scale(1.1); background: #f50057; }
         .mic-btn.listening { animation: pulse 1s infinite; background: #f50057; }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 64, 129, 0.7); }
-            70% { box-shadow: 0 0 0 20px rgba(255, 64, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 64, 129, 0); }
-        }
-
-        .timer-display { font-size: 48px; font-weight: bold; margin: 15px 0; color: #00e676; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 64, 129, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(255, 64, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 64, 129, 0); } }
+        .timer-display { font-size: 40px; font-weight: bold; margin: 10px 0; color: #00e676; }
         .timer-display.danger { color: #ff1744; }
-
-        .card {
-            background: #1e1e1e;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: left;
-            display: none;
-            border-left: 5px solid #ff4081;
-        }
-        .status { font-size: 18px; margin: 15px 0; color: #aaaaaa; min-height: 27px; }
-        .highlight { color: #ff4081; font-weight: bold; }
-        
-        .skip-btn {
-            background: #ff9100;
-            color: #000;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            display: none;
-            margin: 10px auto;
-        }
-        .skip-btn:hover { background: #ff6d00; }
+        .card { background: #1e1e1e; border-radius: 10px; padding: 20px; margin: 15px 0; text-align: left; display: none; border-left: 5px solid #ff4081; }
+        .status { font-size: 16px; margin: 10px 0; color: #aaaaaa; min-height: 24px; }
+        .highlight { color: #ff4081; font-weight: bold; font-size: 1.2em; }
+        .lyrics-box { margin-top: 15px; padding: 15px; background: #000; border-radius: 8px; max-height: 150px; overflow-y: auto; color: #bbb; font-size: 15px; white-space: pre-wrap; text-align: center; }
+        .skip-btn { background: #ff9100; color: #000; border: none; padding: 8px 16px; border-radius: 5px; font-weight: bold; cursor: pointer; display: none; margin: 10px auto; }
     </style>
 </head>
 <body>
 
     <h1>🎤 神曲接唱大挑戰 🎤</h1>
+    <div class="stats-bar">
+        <span>回合: <span id="roundCount">1</span></span>
+        <span>排位: <span id="rankTitle">青銅學徒</span></span>
+        <span>已收錄神曲: <span id="songCount">0</span> 首</span>
+    </div>
     
     <div class="control-panel">
         <label>挑戰關鍵字：<input type="text" id="keywordInput" value="我"></label>
-        <label>倒數時間 (秒)：<input type="number" id="timerInput" value="15"></label>
+        <label>倒數 (秒)：<input type="number" id="timerInput" value="15" style="width:50px;"></label>
     </div>
 
-    <div class="action-area">
+    <div id="status" class="status">點擊麥克風開始第 1 回合！</div>
+
+    <div>
         <button id="micBtn" class="mic-btn" onclick="startChallenge()">🎙️</button>
         <div id="timerDisplay" class="timer-display">--</div>
-        <button id="skipBtn" class="skip-btn" onclick="skipCurrentMusic()">⏭️ 跳過目前音樂</button>
+        <button id="skipBtn" class="skip-btn" onclick="skipCurrentMusic()">⏭️ 跳過音樂，繼續下回合</button>
     </div>
 
-    <div id="status" class="status">點擊麥克風開始挑戰！</div>
-
-    <!-- 玩家歌曲結果 -->
     <div id="playerCard" class="card">
         <h3 style="color: #00e676;">🎯 你的出招</h3>
-        <p><strong>辨識內容：</strong> <span id="pTranscript"></span></p>
         <p><strong>🎵 歌名：</strong> <span id="pTitle"></span></p>
-        <p><strong>👤 原唱：</strong> <span id="pArtist"></span> (<span id="pYear"></span>)</p>
-        <p><em>🔊 正在播放 30 秒試聽...</em></p>
+        <p><strong>👤 原唱：</strong> <span id="pArtist"></span> (<span id="pYear"></span> / <span id="pGenre"></span>)</p>
+        <div id="pLyrics" class="lyrics-box">載入歌詞中...</div>
     </div>
 
-    <!-- AI 歌曲結果 -->
     <div id="aiCard" class="card">
         <h3 style="color: #29b6f6;">🤖 AI 的反擊</h3>
         <p><strong>🎵 歌名：</strong> <span id="aTitle"></span></p>
-        <p><strong>👤 原唱：</strong> <span id="aArtist"></span> (<span id="aYear"></span>)</p>
-        <p><em>🔊 正在播放 30 秒試聽...</em></p>
+        <p><strong>👤 原唱：</strong> <span id="aArtist"></span> (<span id="aYear"></span> / <span id="aGenre"></span>)</p>
+        <div id="aLyrics" class="lyrics-box">載入歌詞中...</div>
     </div>
 
-    <!-- 隱藏的音樂播放器 -->
     <audio id="audioPlayer"></audio>
 
     <script>
-        // 檢查瀏覽器是否支援語音辨識
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            alert("你的瀏覽器不支援語音辨識功能，請使用 Google Chrome 開啟！");
+        let recognition = SpeechRecognition ? new SpeechRecognition() : null;
+        if(recognition) {
+            recognition.lang = 'zh-TW';
+            recognition.interimResults = false;
         }
-
-        let recognition = new SpeechRecognition();
-        recognition.lang = 'zh-TW';
-        recognition.interimResults = false;
 
         let countdownInterval;
         let timeLeft;
-        let currentPhase = 'idle'; // idle, player, ai
         const audioPlayer = document.getElementById('audioPlayer');
         
-        let currentPlayerYear = 0;
-        let currentPlayerTrackId = 0;
+        // 遊戲全域狀態
+        let currentRound = 1;
+        let playedTracks = new Set();
+        let currentPlayerTrack = null;
 
-        // 語音辨識結果處理
-        recognition.onresult = async function(event) {
-            const transcript = event.results[0][0].transcript;
-            const keyword = document.getElementById('keywordInput').value.trim();
-            
-            clearInterval(countdownInterval);
-            document.getElementById('micBtn').classList.remove('listening');
-            
-            if (!transcript.includes(keyword)) {
-                document.getElementById('status').innerHTML = `⚠️ 聽到了「${transcript}」，但裡面沒有<span class='highlight'>「${keyword}」</span>！請重按麥克風再試一次。`;
-                return;
-            }
+        function updateStats() {
+            document.getElementById('roundCount').innerText = currentRound;
+            document.getElementById('songCount').innerText = playedTracks.size;
+            const rankEl = document.getElementById('rankTitle');
+            if(currentRound < 10) { rankEl.innerText = "青銅學徒"; rankEl.className = ""; }
+            else if(currentRound < 20) { rankEl.innerText = "白銀歌手"; rankEl.className = ""; }
+            else if(currentRound < 30) { rankEl.innerText = "黃金麥霸"; rankEl.className = "rank-gold"; }
+            else if(currentRound < 40) { rankEl.innerText = "白金歌神"; rankEl.className = "rank-plat"; }
+            else { rankEl.innerText = "鑽石傳奇"; rankEl.className = "rank-dia"; }
+        }
 
-            document.getElementById('status').innerText = `🔍 聽到了！正在尋找歌曲：${transcript}...`;
-            document.getElementById('pTranscript').innerText = transcript;
-            
-            await processPlayerTurn(transcript, keyword);
-        };
-
-        recognition.onerror = function(event) {
-            clearInterval(countdownInterval);
-            document.getElementById('micBtn').classList.remove('listening');
-            document.getElementById('status').innerText = "⚠️ 麥克風收音失敗或超時，請重按按鈕。";
-        };
+        if(recognition) {
+            recognition.onresult = async function(event) {
+                const transcript = event.results[0][0].transcript;
+                const keyword = document.getElementById('keywordInput').value.trim();
+                clearInterval(countdownInterval);
+                document.getElementById('micBtn').classList.remove('listening');
+                
+                if (!transcript.includes(keyword)) {
+                    document.getElementById('status').innerHTML = `⚠️ 沒聽到「${keyword}」，請重按麥克風重唱！`;
+                    return;
+                }
+                document.getElementById('status').innerText = `🔍 辨識成功！尋找：${transcript}...`;
+                await processPlayerTurn(transcript, keyword);
+            };
+            recognition.onerror = () => {
+                clearInterval(countdownInterval);
+                document.getElementById('micBtn').classList.remove('listening');
+                document.getElementById('status').innerText = "⚠️ 收音失敗，請重按麥克風。";
+            };
+        }
 
         function startChallenge() {
-            // 初始化 UI
+            if(!recognition) return alert("瀏覽器不支援語音辨識，請用 Chrome 開啟。");
+            audioPlayer.play().then(() => audioPlayer.pause()).catch(() => {});
+            
             document.getElementById('playerCard').style.display = 'none';
             document.getElementById('aiCard').style.display = 'none';
             document.getElementById('skipBtn').style.display = 'none';
-            audioPlayer.pause();
             
             const keyword = document.getElementById('keywordInput').value.trim();
             timeLeft = parseInt(document.getElementById('timerInput').value);
             
-            if (!keyword || isNaN(timeLeft) || timeLeft <= 0) {
-                alert("請設定正確的關鍵字和時間！");
-                return;
-            }
-
-            // 啟動倒數與麥克風
-            document.getElementById('status').innerHTML = `🎤 請對著麥克風唱出包含 <span class='highlight'>「${keyword}」</span> 的歌詞！`;
+            document.getElementById('status').innerHTML = `🎤 回合 ${currentRound}：請唱出包含 <span class='highlight'>「${keyword}」</span> 的歌！`;
             document.getElementById('micBtn').classList.add('listening');
             document.getElementById('timerDisplay').innerText = timeLeft;
             document.getElementById('timerDisplay').classList.remove('danger');
@@ -197,110 +134,121 @@
             countdownInterval = setInterval(() => {
                 timeLeft--;
                 document.getElementById('timerDisplay').innerText = timeLeft;
-                
                 if (timeLeft <= 5) document.getElementById('timerDisplay').classList.add('danger');
-                
                 if (timeLeft <= 0) {
                     clearInterval(countdownInterval);
                     recognition.stop();
                     document.getElementById('micBtn').classList.remove('listening');
-                    document.getElementById('status').innerText = "⏰ 時間到！挑戰失敗。";
+                    document.getElementById('status').innerText = "⏰ 時間到！點擊麥克風重新挑戰。";
                 }
             }, 1000);
         }
 
+        async function fetchLyrics(artist, title, keyword, targetBoxId) {
+            const box = document.getElementById(targetBoxId);
+            try {
+                const res = await fetch(`https://api.lyrics.ovh/v1/${artist}/${title}`);
+                const data = await res.json();
+                if(data.lyrics) {
+                    const regex = new RegExp(keyword, 'g');
+                    box.innerHTML = data.lyrics.replace(regex, `<span class="highlight">${keyword}</span>`);
+                } else {
+                    throw new Error("No lyrics");
+                }
+            } catch (e) {
+                // 備用動態歌詞方案
+                box.innerHTML = `<br><span style="font-size: 24px; color:#fff; font-weight:bold;">🎵 區域靈動鎖定 🎵</span><br><br>... <span class="highlight">${keyword}</span> ...`;
+            }
+        }
+
         async function processPlayerTurn(query, keyword) {
             try {
-                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&country=TW&media=music&entity=song&limit=1`);
+                const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&country=TW&media=music&entity=song&limit=5`);
                 const data = await response.json();
 
-                if (data.resultCount === 0) {
-                    document.getElementById('status').innerText = "❌ iTunes 上找不到這首歌，請換一首挑戰！";
-                    return;
+                let track = data.results.find(t => !playedTracks.has(t.trackId));
+                if (!track) {
+                    if(data.resultCount > 0) {
+                        return document.getElementById('status').innerText = "❌ 這首歌之前唱過了！請換一首。";
+                    }
+                    return document.getElementById('status').innerText = "❌ 曲庫找不到這首歌。";
                 }
 
-                const track = data.results[0];
-                currentPlayerYear = parseInt(track.releaseDate.substring(0, 4));
-                currentPlayerTrackId = track.trackId;
+                playedTracks.add(track.trackId);
+                currentPlayerTrack = track;
+                updateStats();
                 
                 document.getElementById('pTitle').innerText = track.trackName;
                 document.getElementById('pArtist').innerText = track.artistName;
-                document.getElementById('pYear').innerText = currentPlayerYear;
+                document.getElementById('pYear').innerText = track.releaseDate.substring(0, 4);
+                document.getElementById('pGenre').innerText = track.primaryGenreName;
                 document.getElementById('playerCard').style.display = 'block';
 
-                // 播放玩家歌曲
+                fetchLyrics(track.artistName, track.trackName, keyword, 'pLyrics');
                 playAudio(track.previewUrl, () => processAITurn(keyword));
-
             } catch (error) {
-                document.getElementById('status').innerText = "⚠️ 網路錯誤，尋找歌曲失敗。";
+                document.getElementById('status').innerText = `⚠️ 錯誤：${error.message}`;
             }
         }
 
         async function processAITurn(keyword) {
-            document.getElementById('status').innerText = "🤖 換 AI 尋找反擊神曲...";
-            
+            document.getElementById('status').innerText = "🤖 AI 分析曲風與熱度中...";
             try {
                 const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(keyword)}&country=TW&media=music&entity=song&limit=50`);
                 const data = await response.json();
 
-                // 排除玩家剛剛唱的歌，且歌名或歌手要包含關鍵字
-                const validTracks = data.results.filter(t => 
-                    t.trackId !== currentPlayerTrackId && 
-                    (t.trackName.includes(keyword) || t.artistName.includes(keyword))
-                );
+                let bestMatch = null;
+                let highestScore = -9999;
+                const pYear = parseInt(currentPlayerTrack.releaseDate.substring(0, 4));
 
-                if (validTracks.length === 0) {
-                    document.getElementById('status').innerText = "🤖 AI 認輸！找不到可以反擊的歌。";
-                    return;
-                }
+                data.results.forEach((track, index) => {
+                    if (playedTracks.has(track.trackId)) return;
+                    if (!track.trackName.includes(keyword) && !track.artistName.includes(keyword)) return;
 
-                let aiSong = null;
-                // 優先尋找前後一年的歌
-                for (let track of validTracks) {
-                    const year = parseInt(track.releaseDate.substring(0, 4));
-                    if (Math.abs(year - currentPlayerYear) <= 1) {
-                        aiSong = track;
-                        break;
+                    let score = 0;
+                    score -= (index * 2); // 越後面的搜尋結果熱度越低，扣分
+                    if (track.primaryGenreName === currentPlayerTrack.primaryGenreName) score += 100;
+                    if (track.artistName === currentPlayerTrack.artistName) score += 50;
+                    const tYear = parseInt(track.releaseDate.substring(0, 4));
+                    score -= (Math.abs(tYear - pYear) * 5);
+
+                    if (score > highestScore) {
+                        highestScore = score;
+                        bestMatch = track;
                     }
+                });
+
+                if (!bestMatch) {
+                    return document.getElementById('status').innerText = "🏆 曲庫耗盡！AI 認輸，你贏了！";
                 }
 
-                // 不顧年份：如果找不到前後一年的，直接拿第一首符合關鍵字的
-                if (!aiSong) {
-                    aiSong = validTracks[0];
-                    console.log("觸發不顧年份機制");
-                }
-
-                const aYear = parseInt(aiSong.releaseDate.substring(0, 4));
-                const highlightedTitle = aiSong.trackName.replace(new RegExp(keyword, 'g'), `<span class="highlight">${keyword}</span>`);
+                playedTracks.add(bestMatch.trackId);
                 
-                document.getElementById('aTitle').innerHTML = highlightedTitle;
-                document.getElementById('aArtist').innerText = aiSong.artistName;
-                document.getElementById('aYear').innerText = aYear;
+                document.getElementById('aTitle').innerHTML = bestMatch.trackName.replace(new RegExp(keyword, 'g'), `<span class="highlight">${keyword}</span>`);
+                document.getElementById('aArtist').innerText = bestMatch.artistName;
+                document.getElementById('aYear').innerText = bestMatch.releaseDate.substring(0, 4);
+                document.getElementById('aGenre').innerText = bestMatch.primaryGenreName;
                 document.getElementById('aiCard').style.display = 'block';
 
                 document.getElementById('status').innerText = "🔥 AI 出招！";
+                fetchLyrics(bestMatch.artistName, bestMatch.trackName, keyword, 'aLyrics');
                 
-                // 播放 AI 歌曲
-                playAudio(aiSong.previewUrl, () => {
-                    document.getElementById('status').innerText = "✅ 雙方接唱完畢！點擊麥克風開始下一回合。";
+                playAudio(bestMatch.previewUrl, () => {
+                    currentRound++;
+                    updateStats();
+                    document.getElementById('status').innerText = `✅ 回合結束！請點擊麥克風進入第 ${currentRound} 回合。`;
                     document.getElementById('skipBtn').style.display = 'none';
                 });
-
             } catch (error) {
                 document.getElementById('status').innerText = "⚠️ 網路錯誤，AI 尋找失敗。";
             }
         }
 
         function playAudio(url, onEndedCallback) {
-            if (!url) {
-                onEndedCallback();
-                return;
-            }
+            if (!url) return onEndedCallback();
             audioPlayer.src = url;
             audioPlayer.play();
-            
             document.getElementById('skipBtn').style.display = 'block';
-            
             audioPlayer.onended = () => {
                 document.getElementById('skipBtn').style.display = 'none';
                 onEndedCallback();
@@ -310,10 +258,7 @@
         function skipCurrentMusic() {
             audioPlayer.pause();
             audioPlayer.currentTime = 0;
-            // 觸發 onended 邏輯，進入下一個階段
-            if (audioPlayer.onended) {
-                audioPlayer.onended();
-            }
+            if (audioPlayer.onended) audioPlayer.onended();
         }
     </script>
 </body>
